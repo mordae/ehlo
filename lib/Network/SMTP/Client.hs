@@ -136,11 +136,19 @@ where
     ConnectionParams { cpHost  = T.unpack smtpHost
                      , cpPort  = smtpPort
                      , cpSocks = Nothing
-                     , cpTls   = if smtpOverSSL then Just tls else Nothing
+                     , cpTls   = toMaybe smtpOverSSL (tlsParams smtpSecure)
                      , cpBind  = Nothing
                      }
-    where tls = defaultTlsParams { tpInsecure = not smtpSecure }
 
+  tlsParams :: Bool -> TlsParams
+  tlsParams secure =
+    defaultTlsParams { tpCipherSuite = "DEFAULT"
+#if MIN_VERSION_hookup(0, 7, 0)
+                     , tpVerify = if secure then VerifyDefault else VerifyNone
+#else
+                     , tpInsecure = not secure
+#endif
+                     }
 
   -- State Machine -----------------------------------------------------------
 
@@ -179,10 +187,7 @@ where
              (False, True) -> quit $ SmtpError code rows
              (False, False) -> ehlo
              (True, _) -> do
-               let tls = defaultTlsParams { tpInsecure    = not smtpSecure
-                                          , tpCipherSuite = "DEFAULT"
-                                          }
-
+               let tls = tlsParams smtpSecure
                liftIO $ upgradeTls tls (T.unpack smtpHost) envConnection
                ehlo
 
@@ -320,6 +325,10 @@ where
 
   isTextAscii :: Text -> Bool
   isTextAscii = all isAscii . T.unpack
+
+
+  toMaybe :: Bool -> a -> Maybe a
+  toMaybe yesno val = if yesno then Just val else Nothing
 
 
 -- vim:set ft=haskell sw=2 ts=2 et:

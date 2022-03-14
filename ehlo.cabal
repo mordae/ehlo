@@ -29,6 +29,7 @@ library
     default-language:   GHC2021
     default-extensions:
         BlockArguments NoImplicitPrelude OverloadedStrings RecordWildCards
+        CPP
 
     ghc-options:
         -Wall -Wcompat -Wincomplete-uni-patterns
