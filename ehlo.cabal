@@ -16,7 +16,9 @@ description:
 
 category:           Network
 build-type:         Simple
-extra-source-files: README.md
+extra-source-files:
+    README.md
+    Changelog.md
 
 source-repository head
     type:     git
